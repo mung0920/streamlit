@@ -1,70 +1,53 @@
-"""
-In-Class Exercise 5 - Streamlit Retail Business Dashboard
-Course: ISOM3400 2026 Fall
-Assessment: In-Class Exercise 5 (Effort ICE - a genuine attempt counts even if imperfect)
-Weight: 2%
-Duration: 30 minutes
-Due: Thursday 19 November 2026 (lecture day)
-Environment: VS Code / local Python
-
-Student information (fill in):
-Name: Mung Hoi Kiu Katherine
-Student ID: 21055761
-Email: hkkmung@connect.ust.hk
-
-How to use:
-1. Fill in your name / ID / email above.
-2. In this folder, install packages:  pip install -r requirements.txt
-3. Complete the fill-in-the-blank lines below so the app matches the expected UI
-   (see Retail_Business_Dashboard.png). Use only the allowed Streamlit calls
-   shown in streamlit_functions.png.
-4. Run the app:  streamlit run app.py
-5. Click Submit and check the summary (try the default target, then a target
-   above 100000 for the Challenge).
-6. Zip ONLY app.py and requirements.txt. The zip filename must include your
-   Student ID, for example {StudentID}_InclassEx5.zip.
-7. Submit the zip on Canvas, or email both the course instructor and the TA.
-
-Scope:
-- Allowed Streamlit functions only: st.title, st.header, st.write,
-  st.number_input, st.selectbox, st.button, st.success.
-- Do NOT wrap the program in functions (no def, no main()). All code stays at
-  top level.
-- Do not add pandas, matplotlib, numpy, or other libraries.
-"""
-
 import streamlit as st
+from openai import OpenAI
 
-# ---------------------------------------------------------------------------
-# Retail Business Dashboard
-# ---------------------------------------------------------------------------
-# A retail manager enters a monthly sales target, selects a region, then
-# clicks Submit to see a summary.
-# Replace each ______ with the missing code. Do not pre-write answers in
-# functions — keep everything at top level.
+# ================= Config =================
+MODEL = "gpt-4o-mini"
+API_KEY = st.secrets["HKUST_API_KEY"]
+CUSTOM_HEADERS = {"api-key": API_KEY}
 
-# Blank A: page title (match the screenshot).
-st.title("Retail Business Dashboard")  # hint: st.title("...")
+client = OpenAI(
+    base_url="https://hkust.azure-api.net/hkust-genai/v1",
+    api_key=API_KEY,
+    default_headers=CUSTOM_HEADERS
+)
 
-# Blank B: section header (match the screenshot).
-st.header("Manager Input Section")  # hint: st.header("...")
+# ================= Page Setup =================
+st.title("HKUST Course Chatbot")
+st.caption("Powered by HKUST GenAI")
 
-# Blank C: short instruction under the header (match the screenshot).
-st.write("Please enter the monthly sales target and select the region.")  # hint: st.write("...")
+# ================= Session State Init =================
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
-# Blank D: monthly sales target (USD). Default 50000. Minimum 0. (match the screenshot)
-# Do not set a maximum (the Challenge uses a target above 50000).
-sales_target = st.number_input("Enter Monthly Sales Target (in USD):", min_value=0, value=50000)  # hint: st.number_input("...")
+# ================= Display History =================
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.write(message["content"])
 
-# Blank E: region dropdown (match the options shown in the document).
-region = st.selectbox("Select Region:", ["North", "South", "East", "West"])  # hint: st.selectbox("...")
+# ================= Handle Input =================
+if prompt := st.chat_input("Ask me anything about the course..."):
+    with st.chat_message("user"):
+        st.write(prompt)
+    st.session_state.messages.append({"role": "user", "content": prompt})
 
-# Blank F: Submit button, then show the entered values and a success message (match the screenshot).
-if st.button("Submit"):  # hint: st.button("...")
-    st.write(f"Sales Target: ${sales_target}")  # hint: st.write("...")  — sales target, include a $
-    st.write(f"Region Selected: {region}")  # hint: st.write("...")  — region selected
-    st.success("Dashboard updated successfully!")  # hint: st.success("...")
-
-    # Challenge: if the sales target is greater than 100000, show an extra message (match the screenshot).
-    if sales_target > 100000:  # hint: compare sales_target with 100000
-        st.write("Great! You have set an ambitious target!")  # hint: st.write("...")
+    with st.chat_message("assistant"):
+        message_placeholder = st.empty()
+        full_response = ""
+        
+        try:
+            response = client.chat.completions.create(
+                model=MODEL,
+                messages=[
+                    {"role": m["role"], "content": m["content"]}
+                    for m in st.session_state.messages
+                ],
+                stream=False
+            )
+            full_response = response.choices[0].message.content
+        except Exception as e:
+            full_response = f"Error: {str(e)}"
+        
+        message_placeholder.write(full_response)
+    
+    st.session_state.messages.append({"role": "assistant", "content": full_response})
