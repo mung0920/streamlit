@@ -1,4 +1,4 @@
 # Streamlit only for this exercise (no pandas / matplotlib / numpy).
 streamlit
-pip install -r requirements.txt
-streamlit run app.py
+pandas
+requests
