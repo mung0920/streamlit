@@ -6,7 +6,7 @@ import numpy as np
 # -------------------------------
 # Title and Description
 # -------------------------------
-st.title("📊 Business Sales Dashboard")
+st.title("📊 ISOM 3400: Business Sales Dashboard")
 st.write("Analyze monthly sales data interactively!")
 
 # -------------------------------
