@@ -1,4 +1,2 @@
 # Streamlit only for this exercise (no pandas / matplotlib / numpy).
 streamlit
-pandas
-requests
