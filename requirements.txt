@@ -1,6 +1,4 @@
+# Streamlit only for this exercise (no pandas / matplotlib / numpy).
 streamlit
-pandas
-numpy
-matplotlib
-beautifulsoup4
-requests
+pip install -r requirements.txt
+streamlit run app.py
